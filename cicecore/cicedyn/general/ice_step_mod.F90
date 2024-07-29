@@ -14,6 +14,7 @@
       use ice_kinds_mod
       use ice_blocks, only: block, get_block
       use ice_blocks, only: nx_block, ny_block
+      use ice_communicate, only: my_task, master_task
       use ice_constants, only: c0, c1, c1000, c4, p25
       use ice_constants, only: field_loc_center, field_loc_NEcorner, &
           field_loc_Nface, field_loc_Eface, &
@@ -222,11 +223,12 @@
           Cdn_atm, Cdn_atm_skin, Cdn_atm_floe, Cdn_atm_rdg, Cdn_atm_pond, &
           hfreebd, hdraft, hridge, distrdg, hkeel, dkeel, lfloe, dfloe, &
           fswsfcn, fswintn, Sswabsn, Iswabsn, meltsliqn, meltsliq, &
-          fswthrun, fswthrun_vdr, fswthrun_vdf, fswthrun_idr, fswthrun_idf
+          fswthrun, fswthrun_vdr, fswthrun_vdf, fswthrun_idr, fswthrun_idf, &
+          floe_rad_c, floe_binwidth
       use ice_calendar, only: yday
-      use ice_domain_size, only: ncat, nilyr, nslyr, n_iso, n_aero
-      use ice_flux, only: frzmlt, sst, Tf, strocnxT_iavg, strocnyT_iavg, rside, fbot, Tbot, Tsnice, &
-          meltsn, melttn, meltbn, congeln, snoicen, uatmT, vatmT, fside, wlat, &
+      use ice_domain_size, only: ncat, nilyr, nslyr, n_iso, n_aero, nfsd
+      use ice_flux, only: frzmlt, sst, Tf, strocnxT_iavg, strocnyT_iavg, rsiden, fbot, Tbot, Tsnice, &
+          meltsn, melttn, meltbn, congeln, snoicen, uatmT, vatmT, wlat, &
           wind, rhoa, potT, Qa, zlvl, zlvs, strax, stray, flatn, fsensn, fsurfn, fcondtopn, &
           flw, fsnow, fpond, sss, mlt_onset, frz_onset, fcondbotn, fcondbot, fsloss, &
           frain, Tair, strairxT, strairyT, fsurf, fcondtop, fsens, &
@@ -239,7 +241,8 @@
           Qa_iso, Qref_iso, fiso_evap, HDO_ocn, H2_16O_ocn, H2_18O_ocn
       use ice_grid, only: lmask_n, lmask_s, tmask
       use ice_state, only: aice, aicen, aicen_init, vicen_init, &
-          vice, vicen, vsno, vsnon, trcrn, vsnon_init
+           vice, vicen, vsno, vsnon, trcrn, vsnon_init
+      
 #ifdef CICE_IN_NEMO
       use ice_state, only: aice_init
 #endif
@@ -270,7 +273,7 @@
       integer (kind=int_kind) :: &
          ntrcr, nt_apnd, nt_hpnd, nt_ipnd, nt_alvl, nt_vlvl, nt_Tsfc, &
          nt_iage, nt_FY, nt_qice, nt_sice, nt_aero, nt_qsno, &
-         nt_isosno, nt_isoice, nt_rsnw, nt_smice, nt_smliq
+         nt_isosno, nt_isoice, nt_rsnw, nt_smice, nt_smliq, nt_fsd
 
       logical (kind=log_kind) :: &
          tr_iage, tr_FY, tr_iso, tr_aero, tr_pond, &
@@ -308,7 +311,7 @@
          nt_qice_out=nt_qice, nt_sice_out=nt_sice, &
          nt_aero_out=nt_aero, nt_qsno_out=nt_qsno, &
          nt_rsnw_out=nt_rsnw, nt_smice_out=nt_smice, nt_smliq_out=nt_smliq, &
-         nt_isosno_out=nt_isosno, nt_isoice_out=nt_isoice)
+         nt_isosno_out=nt_isosno, nt_isoice_out=nt_isoice, nt_fsd_out=nt_fsd)
       call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
@@ -465,8 +468,7 @@
                       Tbot         = Tbot        (i,j,  iblk), &
                       Tsnice       = Tsnice      (i,j,  iblk), &
                       frzmlt       = frzmlt      (i,j,  iblk), &
-                      rside        = rside       (i,j,  iblk), &
-                      fside        = fside       (i,j,  iblk), &
+                      rsiden       = rsiden      (i,j,:,iblk), &
                       wlat         = wlat        (i,j,  iblk), &
                       fsnow        = fsnow       (i,j,  iblk), &
                       frain        = frain       (i,j,  iblk), &
@@ -537,7 +539,11 @@
                       lmask_s      = lmask_s     (i,j,  iblk), &
                       mlt_onset    = mlt_onset   (i,j,  iblk), &
                       frz_onset    = frz_onset   (i,j,  iblk), &
-                      yday=yday, prescribed_ice=prescribed_ice)
+                      yday=yday, prescribed_ice=prescribed_ice, &
+                      afsdn        = trcrn       (i,j,nt_fsd:nt_fsd+nfsd-1,:,iblk), &
+                      nfsd         = nfsd, &
+                      floe_rad_c = floe_rad_c(:),          &
+                      floe_binwidth = floe_binwidth(:) )
 
       !-----------------------------------------------------------------
       ! handle per-category i2x fields, no merging
@@ -617,7 +623,7 @@
       use ice_calendar, only: yday
       use ice_domain_size, only: ncat, nilyr, nslyr, nblyr, nfsd
       use ice_flux, only: fresh, frain, fpond, frzmlt, frazil, frz_onset, &
-          fsalt, Tf, sss, salinz, fhocn, rside, fside, wlat, &
+          fsalt, Tf, sss, salinz, fhocn, rsiden, wlat, &
           meltl, frazil_diag
       use ice_flux_bgc, only: flux_bio, faero_ocn, &
           fiso_ocn, HDO_ocn, H2_16O_ocn, H2_18O_ocn
@@ -697,9 +703,8 @@
                       Tf         = Tf        (i,j,  iblk), &
                       sss        = sss       (i,j,  iblk), &
                       salinz     = salinz    (i,j,:,iblk), &
-                      rside      = rside     (i,j,  iblk), &
+                      rsiden     = rsiden    (i,j,:,iblk), &
                       meltl      = meltl     (i,j,  iblk), &
-                      fside      = fside     (i,j,  iblk), &
                       wlat       = wlat      (i,j,  iblk), &
                       frzmlt     = frzmlt    (i,j,  iblk), &
                       frazil     = frazil    (i,j,  iblk), &
@@ -732,7 +737,7 @@
                       d_afsd_latm= d_afsd_latm(i,j,:,iblk),&
                       d_afsd_weld= d_afsd_weld(i,j,:,iblk),&
                       floe_rad_c = floe_rad_c(:),          &
-                      floe_binwidth = floe_binwidth(:))
+                      floe_binwidth = floe_binwidth(:) )
          endif ! tmask
 
       enddo                     ! i
@@ -1282,7 +1287,6 @@
       use ice_grid, only: TLAT, TLON, tmask
       use ice_state, only: aicen, vicen, vsnon, trcrn
       use ice_timers, only: ice_timer_start, ice_timer_stop, timer_sw
-      use ice_communicate, only: my_task
       use ice_diagnostics, only: npnt, print_points, pmloc, piloc, pjloc
 
       real (kind=dbl_kind), intent(in) :: &
@@ -1433,7 +1437,8 @@
       enddo ! i
       enddo ! j
 
-      call icepack_warnings_flush(nu_diag)
+      if (my_task == master_task) &
+         call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
 
@@ -1498,7 +1503,8 @@
       !-----------------------------------------------------------------
 
          call icepack_query_parameters(albocn_out=albocn)
-         call icepack_warnings_flush(nu_diag)
+         if (my_task == master_task) &
+            call icepack_warnings_flush(nu_diag)
          if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
             file=__FILE__, line=__LINE__)
 
@@ -1558,7 +1564,8 @@
                          Cdn_atm_ratio_n = Cdn_atm_ratio(i,j,iblk))
          enddo ! ij
 
-         call icepack_warnings_flush(nu_diag)
+         if (my_task == master_task) &
+            call icepack_warnings_flush(nu_diag)
          if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
             file=__FILE__, line=__LINE__)
 
@@ -1595,7 +1602,8 @@
                                       frzmlt   =frzmlt   (i,j,iblk), dt    =dt)
       enddo                    ! ij
 
-      call icepack_warnings_flush(nu_diag)
+      if (my_task == master_task) &
+         call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
 
@@ -1659,7 +1667,8 @@
       call icepack_query_tracer_flags(tr_zaero_out=tr_zaero)
       call icepack_query_tracer_indices(nlt_zaero_out=nlt_zaero)
       call icepack_query_tracer_indices(bio_index_o_out=bio_index_o)
-      call icepack_warnings_flush(nu_diag)
+      if (my_task == master_task) &
+         call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
 
@@ -1750,7 +1759,8 @@
       enddo               ! i
       enddo               ! j
 
-      call icepack_warnings_flush(nu_diag)
+      if (my_task == master_task) &
+         call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
 
