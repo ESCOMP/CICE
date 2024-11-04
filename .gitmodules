@@ -1,4 +1,4 @@
 [submodule "icepack"]
 	path = icepack
-        branch = cesm3_cice
+        hash = f20010d1cac95cacea459725998d3524c2b3f1d1
 	url = https://github.com/ESCOMP/icepack
