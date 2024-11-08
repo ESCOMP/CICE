@@ -275,8 +275,13 @@
 
       integer (kind=int_kind) :: &
          ntrcr, nt_apnd, nt_hpnd, nt_ipnd, nt_alvl, nt_vlvl, nt_Tsfc, &
+<<<<<<< HEAD
          nt_iage, nt_FY, nt_qice, nt_sice, nt_aero, nt_qsno, &
          nt_isosno, nt_isoice, nt_rsnw, nt_smice, nt_smliq, nt_fsd
+=======
+         nt_iage, nt_FY, nt_qice, nt_sice, nt_aero, nt_qsno, nt_fsd, &
+         nt_isosno, nt_isoice, nt_rsnw, nt_smice, nt_smliq
+>>>>>>> origin/main
 
       logical (kind=log_kind) :: &
          tr_iage, tr_FY, tr_iso, tr_aero, calc_Tsfc, snwgrain
@@ -308,7 +313,7 @@
       call icepack_query_tracer_indices( &
          nt_apnd_out=nt_apnd, nt_hpnd_out=nt_hpnd, nt_ipnd_out=nt_ipnd, &
          nt_alvl_out=nt_alvl, nt_vlvl_out=nt_vlvl, nt_Tsfc_out=nt_Tsfc, &
-         nt_iage_out=nt_iage, nt_FY_out=nt_FY, &
+         nt_iage_out=nt_iage, nt_FY_out=nt_FY, nt_fsd_out=nt_fsd, &
          nt_qice_out=nt_qice, nt_sice_out=nt_sice, &
          nt_aero_out=nt_aero, nt_qsno_out=nt_qsno, &
          nt_rsnw_out=nt_rsnw, nt_smice_out=nt_smice, nt_smliq_out=nt_smliq, &
@@ -418,6 +423,7 @@
                       ipnd         = trcrn       (i,j,nt_ipnd,:,iblk),                   &
                       iage         = trcrn       (i,j,nt_iage,:,iblk),                   &
                       FY           = trcrn       (i,j,nt_FY  ,:,iblk),                   &
+                      afsdn        = trcrn       (i,j,nt_fsd:nt_fsd+nfsd-1,:,iblk),      &
                       rsnwn        = rsnwn       (:,:),        &
                       smicen       = smicen      (:,:),        &
                       smliqn       = smliqn      (:,:),        &
@@ -630,13 +636,17 @@
 
       use ice_arrays_column, only: hin_max, ocean_bio, wave_sig_ht, &
           wave_spectrum, wavefreq, dwavefreq, &
-          first_ice, bgrid, cgrid, igrid, floe_rad_c, floe_binwidth, &
+          first_ice, bgrid, cgrid, igrid, &
           d_afsd_latg, d_afsd_newi, d_afsd_latm, d_afsd_weld
       use ice_calendar, only: yday
       use ice_domain_size, only: ncat, nilyr, nslyr, nblyr, nfsd
       use ice_flux, only: fresh, frain, fpond, frzmlt, frazil, frz_onset, &
           fsalt, Tf, sss, salinz, fhocn, rsiden, wlat, &
+<<<<<<< HEAD
           meltl, frazil_diag,mipnd
+=======
+          meltl, frazil_diag
+>>>>>>> origin/main
       use ice_flux_bgc, only: flux_bio, faero_ocn, &
           fiso_ocn, HDO_ocn, H2_16O_ocn, H2_18O_ocn
       use ice_grid, only: tmask
@@ -742,10 +752,14 @@
                       d_afsd_latg= d_afsd_latg(i,j,:,iblk),&
                       d_afsd_newi= d_afsd_newi(i,j,:,iblk),&
                       d_afsd_latm= d_afsd_latm(i,j,:,iblk),&
+<<<<<<< HEAD
                       d_afsd_weld= d_afsd_weld(i,j,:,iblk),&
                       floe_rad_c = floe_rad_c(:),          &
                       floe_binwidth = floe_binwidth(:),    &
                       mipnd      = mipnd(i,j, iblk))
+=======
+                      d_afsd_weld= d_afsd_weld(i,j,:,iblk))
+>>>>>>> origin/main
          endif ! tmask
 
       enddo                     ! i
@@ -882,7 +896,7 @@
       subroutine step_dyn_wave (dt)
 
       use ice_arrays_column, only: wave_spectrum, &
-          d_afsd_wave, floe_rad_l, floe_rad_c, wavefreq, dwavefreq
+          d_afsd_wave, wavefreq, dwavefreq
       use ice_domain_size, only: ncat, nfsd, nfreq
       use ice_state, only: trcrn, aicen, aice, vice
       use ice_timers, only: ice_timer_start, ice_timer_stop, timer_column, &
@@ -925,7 +939,6 @@
          do j = jlo, jhi
          do i = ilo, ihi
             d_afsd_wave(i,j,:,iblk) = c0
-
             if (wave_spec_type.eq.'alt') then
             call icepack_step_wavefracture_alt (wave_spec_type, &
                                             dt,            nfreq,          &
@@ -938,17 +951,17 @@
                                             trcrn          (i,j,:,:,iblk), &
                                             d_afsd_wave    (i,j,:,  iblk))
             else
-             call icepack_step_wavefracture (wave_spec_type, &
-                                            dt,            nfreq,          &
-                                            aice           (i,j,    iblk), &
-                                            vice           (i,j,    iblk), &
-                                            aicen          (i,j,:,  iblk), &
-                                            floe_rad_l(:), floe_rad_c(:),  &
-                                            wave_spectrum  (i,j,:,  iblk), &
-                                            wavefreq(:),   dwavefreq(:),   &
-                                            trcrn          (i,j,:,:,iblk), &
-                                            d_afsd_wave    (i,j,:,  iblk))
-            end if
+            call icepack_step_wavefracture(wave_spec_type = wave_spec_type,             &
+                                           dt = dt, nfreq = nfreq,                      &
+                                           aice        = aice           (i,j,    iblk), &
+                                           vice        = vice           (i,j,    iblk), &
+                                           aicen       = aicen          (i,j,:,  iblk), &
+                                           wave_spectrum = wave_spectrum(i,j,:,  iblk), &
+                                           wavefreq    = wavefreq       (:),            &
+                                           dwavefreq   = dwavefreq      (:),            &
+                                           trcrn       = trcrn          (i,j,:,:,iblk), &
+                                           d_afsd_wave = d_afsd_wave    (i,j,:,  iblk))
+            endif
          end do ! i
          end do ! j
       end do    ! iblk

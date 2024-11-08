@@ -392,6 +392,7 @@
          rdg_shear   ! shear term for ridging (1/s)
 
       real (kind=dbl_kind), dimension(:,:,:,:), allocatable, public :: &
+         rsiden    ,&   ! fraction of ice that melts laterally
          salinz    ,&   ! initial salinity  profile (ppt)
          Tmltz          ! initial melting temperature (^oC)
 
