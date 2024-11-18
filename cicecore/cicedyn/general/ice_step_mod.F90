@@ -222,8 +222,7 @@
           Cdn_atm, Cdn_atm_skin, Cdn_atm_floe, Cdn_atm_rdg, Cdn_atm_pond, &
           hfreebd, hdraft, hridge, distrdg, hkeel, dkeel, lfloe, dfloe, &
           fswsfcn, fswintn, Sswabsn, Iswabsn, meltsliqn, meltsliq, &
-          fswthrun, fswthrun_vdr, fswthrun_vdf, fswthrun_idr, fswthrun_idf, &
-          floe_rad_c, floe_binwidth
+          fswthrun, fswthrun_vdr, fswthrun_vdf, fswthrun_idr, fswthrun_idf
       use ice_calendar, only: yday
       use ice_domain_size, only: ncat, nilyr, nslyr, n_iso, n_aero, nfsd
       use ice_flux, only: frzmlt, sst, Tf, strocnxT_iavg, strocnyT_iavg, rsiden, fbot, Tbot, Tsnice, &
@@ -275,13 +274,8 @@
 
       integer (kind=int_kind) :: &
          ntrcr, nt_apnd, nt_hpnd, nt_ipnd, nt_alvl, nt_vlvl, nt_Tsfc, &
-<<<<<<< HEAD
-         nt_iage, nt_FY, nt_qice, nt_sice, nt_aero, nt_qsno, &
-         nt_isosno, nt_isoice, nt_rsnw, nt_smice, nt_smliq, nt_fsd
-=======
          nt_iage, nt_FY, nt_qice, nt_sice, nt_aero, nt_qsno, nt_fsd, &
          nt_isosno, nt_isoice, nt_rsnw, nt_smice, nt_smliq
->>>>>>> origin/main
 
       logical (kind=log_kind) :: &
          tr_iage, tr_FY, tr_iso, tr_aero, calc_Tsfc, snwgrain
@@ -317,7 +311,7 @@
          nt_qice_out=nt_qice, nt_sice_out=nt_sice, &
          nt_aero_out=nt_aero, nt_qsno_out=nt_qsno, &
          nt_rsnw_out=nt_rsnw, nt_smice_out=nt_smice, nt_smliq_out=nt_smliq, &
-         nt_isosno_out=nt_isosno, nt_isoice_out=nt_isoice, nt_fsd_out=nt_fsd)
+         nt_isosno_out=nt_isosno, nt_isoice_out=nt_isoice)
       call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
@@ -423,7 +417,6 @@
                       ipnd         = trcrn       (i,j,nt_ipnd,:,iblk),                   &
                       iage         = trcrn       (i,j,nt_iage,:,iblk),                   &
                       FY           = trcrn       (i,j,nt_FY  ,:,iblk),                   &
-                      afsdn        = trcrn       (i,j,nt_fsd:nt_fsd+nfsd-1,:,iblk),      &
                       rsnwn        = rsnwn       (:,:),        &
                       smicen       = smicen      (:,:),        &
                       smliqn       = smliqn      (:,:),        &
@@ -548,9 +541,6 @@
                       mlt_onset    = mlt_onset   (i,j,  iblk), &
                       frz_onset    = frz_onset   (i,j,  iblk), &
                       afsdn        = trcrn       (i,j,nt_fsd:nt_fsd+nfsd-1,:,iblk), &
-                      nfsd         = nfsd, &
-                      floe_rad_c = floe_rad_c(:),          &
-                      floe_binwidth = floe_binwidth(:),    & 
                       flpnd        = flpnd       (i,j,  iblk), &
                       expnd        = expnd       (i,j,  iblk), &
                       frpnd        = frpnd       (i,j,  iblk), &
@@ -639,14 +629,10 @@
           first_ice, bgrid, cgrid, igrid, &
           d_afsd_latg, d_afsd_newi, d_afsd_latm, d_afsd_weld
       use ice_calendar, only: yday
-      use ice_domain_size, only: ncat, nilyr, nslyr, nblyr, nfsd
+      use ice_domain_size, only: ncat, nilyr, nslyr, nblyr
       use ice_flux, only: fresh, frain, fpond, frzmlt, frazil, frz_onset, &
           fsalt, Tf, sss, salinz, fhocn, rsiden, wlat, &
-<<<<<<< HEAD
-          meltl, frazil_diag,mipnd
-=======
-          meltl, frazil_diag
->>>>>>> origin/main
+          meltl, frazil_diag, mipnd
       use ice_flux_bgc, only: flux_bio, faero_ocn, &
           fiso_ocn, HDO_ocn, H2_16O_ocn, H2_18O_ocn
       use ice_grid, only: tmask
@@ -752,14 +738,8 @@
                       d_afsd_latg= d_afsd_latg(i,j,:,iblk),&
                       d_afsd_newi= d_afsd_newi(i,j,:,iblk),&
                       d_afsd_latm= d_afsd_latm(i,j,:,iblk),&
-<<<<<<< HEAD
                       d_afsd_weld= d_afsd_weld(i,j,:,iblk),&
-                      floe_rad_c = floe_rad_c(:),          &
-                      floe_binwidth = floe_binwidth(:),    &
                       mipnd      = mipnd(i,j, iblk))
-=======
-                      d_afsd_weld= d_afsd_weld(i,j,:,iblk))
->>>>>>> origin/main
          endif ! tmask
 
       enddo                     ! i
@@ -897,7 +877,7 @@
 
       use ice_arrays_column, only: wave_spectrum, &
           d_afsd_wave, wavefreq, dwavefreq
-      use ice_domain_size, only: ncat, nfsd, nfreq
+      use ice_domain_size, only: ncat, nfreq
       use ice_state, only: trcrn, aicen, aice, vice
       use ice_timers, only: ice_timer_start, ice_timer_stop, timer_column, &
           timer_fsd
@@ -945,7 +925,6 @@
                                             aice           (i,j,    iblk), &
                                             vice           (i,j,    iblk), &
                                             aicen          (i,j,:,  iblk), &
-                                            floe_rad_l(:), floe_rad_c(:),  &
                                             wave_spectrum  (i,j,:,  iblk), &
                                             wavefreq(:),   dwavefreq(:),   &
                                             trcrn          (i,j,:,:,iblk), &

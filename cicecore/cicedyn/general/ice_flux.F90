@@ -344,7 +344,6 @@
 
       real (kind=dbl_kind), &
          dimension (:,:,:,:), allocatable, public :: &
-         rsiden,   & ! fraction of ice that melts laterally
          fsurfn,   & ! category fsurf
          fcondtopn,& ! category fcondtop
          fcondbotn,& ! category fcondbot
