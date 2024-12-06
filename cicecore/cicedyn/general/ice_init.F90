@@ -890,7 +890,7 @@
       ! runid and runtype are obtained from the driver, not from the namelist
 
       if (my_task == master_task) then
-         history_file  = trim(runid) // ".cice" // trim(inst_suffix) //".h"
+         history_file  = trim(runid) // ".cice" // trim(inst_suffix)
          restart_file  = trim(runid) // ".cice" // trim(inst_suffix) //".r"
          incond_file   = trim(runid) // ".cice" // trim(inst_suffix) //".i"
          ! Note by tcraig - this if test is needed because the nuopc cap sets
