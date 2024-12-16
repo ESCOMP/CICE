@@ -851,7 +851,6 @@ contains
     year_init = (idate0/10000)
     month_init= (idate0-year_init*10000)/100           ! integer month of basedate
     day_init  = idate0-year_init*10000-month_init*100
-    msec      = start_tod
 
     !  - Set use_leap_years based on calendar (as some CICE calls use this instead of the calendar type)
     if (calendar_type == ice_calendar_gregorian) then
