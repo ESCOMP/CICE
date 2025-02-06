@@ -502,11 +502,7 @@
       rfracmin  = 0.15_dbl_kind   ! minimum retained fraction of meltwater
       rfracmax  = 0.85_dbl_kind   ! maximum retained fraction of meltwater
       pndaspect = 0.8_dbl_kind    ! ratio of pond depth to area fraction
-<<<<<<< HEAD
-      tscale_pnd_drain = 0.5
-=======
       tscale_pnd_drain = c10      ! mushy macroscopic drainage timescale (days)
->>>>>>> origin/sealevelponds
       snwredist = 'none'          ! type of snow redistribution
       snw_aging_table = 'test'    ! snow aging lookup table
       snw_filename    = 'unknown' ! snowtable filename
@@ -1086,11 +1082,7 @@
       call broadcast_scalar(rfracmin,             master_task)
       call broadcast_scalar(rfracmax,             master_task)
       call broadcast_scalar(pndaspect,            master_task)
-<<<<<<< HEAD
-      call broadcast_scalar(tscale_pnd_drain,   master_task)
-=======
       call broadcast_scalar(tscale_pnd_drain,     master_task)
->>>>>>> origin/sealevelponds
       call broadcast_scalar(snwredist,            master_task)
       call broadcast_scalar(snw_aging_table,      master_task)
       call broadcast_scalar(snw_filename,         master_task)

@@ -1,4 +1,4 @@
 [submodule "icepack"]
 	path = icepack
-        hash = 5e467c5590cbc5701b1f28e5f0995f06e38a6481
+        hash = a19bca79e4f7276d0c9dd1e1bcb3dcab83af1276
 	url = https://github.com/ESCOMP/icepack
