@@ -545,6 +545,10 @@
          hpnd , & ! melt pond depth
          ipnd , & ! melt pond refrozen lid thickness
          dhsn     ! depth difference for snow on sea ice and pond ice
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/sealevelponds
       character(len=*),parameter :: subname='(init_meltponds_sealvl)'
 
       apnd(:,:,:) = c0

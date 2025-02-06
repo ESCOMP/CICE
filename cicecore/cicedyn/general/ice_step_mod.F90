@@ -540,7 +540,10 @@
                       lmask_s      = lmask_s     (i,j,  iblk), &
                       mlt_onset    = mlt_onset   (i,j,  iblk), &
                       frz_onset    = frz_onset   (i,j,  iblk), &
+<<<<<<< HEAD
                       afsdn        = trcrn       (i,j,nt_fsd:nt_fsd+nfsd-1,:,iblk), &
+=======
+>>>>>>> origin/sealevelponds
                       flpnd        = flpnd       (i,j,  iblk), &
                       expnd        = expnd       (i,j,  iblk), &
                       frpnd        = frpnd       (i,j,  iblk), &
@@ -1159,7 +1162,10 @@
                          flux_bio  = flux_bio (i,j,1:nbtrcr,iblk), &
                          Tf        = Tf(i,j,iblk),          &
                          rdpnd     = rdpnd(i,j,iblk))
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/sealevelponds
          endif ! tmask
 
       enddo ! i
