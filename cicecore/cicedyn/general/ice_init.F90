@@ -14,7 +14,7 @@
 
       use ice_kinds_mod
       use ice_communicate, only: my_task, master_task, ice_barrier
-      use ice_constants, only: c0, c1, c2, c3, c5, c12, &
+      use ice_constants, only: c0, c1, c2, c3, c5, c10, c12, &
           p001, p01, p2, p3, p5, p75, p166, cm_to_m
       use ice_exit, only: abort_ice
       use ice_fileunits, only: nu_nml, nu_diag, nml_filename, diag_type, &
