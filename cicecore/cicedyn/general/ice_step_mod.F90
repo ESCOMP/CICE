@@ -540,6 +540,7 @@
                       lmask_s      = lmask_s     (i,j,  iblk), &
                       mlt_onset    = mlt_onset   (i,j,  iblk), &
                       frz_onset    = frz_onset   (i,j,  iblk), &
+                      afsdn        = trcrn       (i,j,nt_fsd:nt_fsd+nfsd-1,:,iblk), &
                       flpnd        = flpnd       (i,j,  iblk), &
                       expnd        = expnd       (i,j,  iblk), &
                       frpnd        = frpnd       (i,j,  iblk), &
@@ -630,7 +631,7 @@
       use ice_calendar, only: yday
       use ice_domain_size, only: ncat, nilyr, nslyr, nblyr
       use ice_flux, only: fresh, frain, fpond, frzmlt, frazil, frz_onset, &
-          fsalt, Tf, sss, salinz, fhocn, rsiden, wlat, &
+          fsalt, Tf, Tair, sss, salinz, fhocn, rsiden, wlat, &
           meltl, frazil_diag, mipnd
       use ice_flux_bgc, only: flux_bio, faero_ocn, &
           fiso_ocn, HDO_ocn, H2_16O_ocn, H2_18O_ocn
@@ -707,6 +708,7 @@
                       n_trcr_strata = n_trcr_strata(:),    &
                       nt_strata  = nt_strata(:,:),         &
                       Tf         = Tf        (i,j,  iblk), &
+                      Tair       = Tair      (i,j,  iblk), &
                       sss        = sss       (i,j,  iblk), &
                       salinz     = salinz    (i,j,:,iblk), &
                       rsiden     = rsiden    (i,j,:,iblk), &
@@ -1158,6 +1160,7 @@
                          flux_bio  = flux_bio (i,j,1:nbtrcr,iblk), &
                          Tf        = Tf(i,j,iblk),          &
                          rdpnd     = rdpnd(i,j,iblk))
+
          endif ! tmask
 
       enddo ! i
