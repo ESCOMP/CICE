@@ -226,6 +226,7 @@
 /
 
 &ponds_nml
+    apnd_sl         = 0.27d0
     hp1             = 0.01
     hs0             = 0.
     hs1             = 0.03
@@ -305,6 +306,8 @@
     ocn_data_format = 'bin'
     ocn_data_dir    = '/unknown_ocn_data_dir'
     oceanmixed_file = 'unknown_oceanmixed_file'
+    semi_implicit_Tsfc = .false.
+    vapor_flux_correction = .false.
 /
 
 &domain_nml
@@ -653,10 +656,22 @@
     f_apondn       = 'x'
     f_apeffn       = 'x'
     f_hpondn       = 'x'
+    f_dpnd_flushn  = 'x'
+    f_dpnd_exponn  = 'x'
+    f_dpnd_freebdn = 'x'
+    f_dpnd_initialn= 'x'
+    f_dpnd_dlidn   = 'x'
     f_apond        = 'm'
     f_hpond        = 'm'
     f_ipond        = 'm'
     f_apeff        = 'm'
+    f_dpnd_flush   = 'x'
+    f_dpnd_expon   = 'x'
+    f_dpnd_freebd  = 'x'
+    f_dpnd_initial = 'x'
+    f_dpnd_dlid    = 'x'
+    f_dpnd_melt    = 'x'
+    f_dpnd_ridge   = 'x'
     f_apond_ai     = 'm'
     f_hpond_ai     = 'm'
     f_ipond_ai     = 'm'

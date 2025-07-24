@@ -286,7 +286,7 @@ contains
     if (trim(runtype) == 'continue') then
        ! start from core restart file
        call restartfile()           ! given by pointer in ice_in
-      call calendar()              ! update time parameters
+       call calendar()              ! update time parameters
        if (kdyn == 2) call read_restart_eap ! EAP
     else if (restart) then          ! ice_ic = core restart file
        call restartfile (ice_ic)    !  or 'default' or 'none'
@@ -299,8 +299,7 @@ contains
     ! tracers
     ! ice age tracer
     if (tr_iage) then
-       if (trim(runtype) == 'continue') &
-            restart_age = .true.
+       if (trim(runtype) == 'continue') restart_age = .true.
        if (restart_age) then
           call read_restart_age
        else
@@ -334,8 +333,7 @@ contains
     endif
     ! level-ice melt ponds
     if (tr_pond_lvl) then
-       if (trim(runtype) == 'continue') &
-            restart_pond_lvl = .true.
+       if (trim(runtype) == 'continue') restart_pond_lvl = .true.
        if (restart_pond_lvl) then
           call read_restart_pond_lvl
        else
@@ -349,8 +347,7 @@ contains
     endif
     ! sealvl melt ponds
     if (tr_pond_sealvl) then
-       if (trim(runtype) == 'continue') &
-            restart_pond_sealvl = .true.
+       if (trim(runtype) == 'continue') restart_pond_sealvl = .true.
        if (restart_pond_sealvl) then
           call read_restart_pond_sealvl
        else
@@ -364,8 +361,7 @@ contains
     endif
     ! topographic melt ponds
     if (tr_pond_topo) then
-       if (trim(runtype) == 'continue') &
-            restart_pond_topo = .true.
+       if (trim(runtype) == 'continue') restart_pond_topo = .true.
        if (restart_pond_topo) then
           call read_restart_pond_topo
        else
@@ -425,10 +421,8 @@ contains
     endif
 
     if (trim(runtype) == 'continue') then
-       if (tr_brine) &
-            restart_hbrine = .true.
-       if (skl_bgc .or. z_tracers) &
-            restart_bgc = .true.
+       if (tr_brine) restart_hbrine = .true.
+       if (skl_bgc .or. z_tracers) restart_bgc = .true.
     endif
 
     if (tr_brine .or. skl_bgc) then ! brine height tracer

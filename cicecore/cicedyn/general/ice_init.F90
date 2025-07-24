@@ -152,7 +152,7 @@
 
       real (kind=dbl_kind) :: ustar_min, albicev, albicei, albsnowv, albsnowi, &
         ahmax, R_ice, R_pnd, R_snw, dT_mlt, rsnw_mlt, emissivity, hi_min, &
-        mu_rdg, hs0, dpscale, rfracmin, rfracmax, pndaspect, hs1, hp1, &
+        mu_rdg, hs0, dpscale, rfracmin, rfracmax, pndaspect, apnd_sl, hs1, hp1, &
         a_rapid_mode, Rac_rapid_mode, aspect_rapid_mode, dSdt_slow_mode, &
         phi_c_slow_mode, phi_i_mushy, kalg, atmiter_conv, Pstar, Cstar, &
         sw_frac, sw_dtemp, floediam, hfrazilmin, iceruf, iceruf_ocn, &
@@ -167,7 +167,7 @@
         congel_freeze, capping_method, snw_ssp_table
 
       logical (kind=log_kind) :: calc_Tsfc, formdrag, highfreq, calc_strair, wave_spec, &
-        sw_redist, calc_dragio, use_smliq_pnd, snwgrain
+        sw_redist, calc_dragio, use_smliq_pnd, snwgrain, semi_implicit_Tsfc, vapor_flux_correction
 
       logical (kind=log_kind) :: tr_iage, tr_FY, tr_lvl, tr_pond
       logical (kind=log_kind) :: tr_iso, tr_aero, tr_fsd, tr_snow
@@ -241,7 +241,6 @@
         dSdt_slow_mode, phi_c_slow_mode, phi_i_mushy,                   &
         floediam,       hfrazilmin,      Tliquidus_max,   hi_min,       &
         tscale_pnd_drain
-        
 
       namelist /dynamics_nml/ &
         kdyn,           ndte,           revised_evp,    yield_curve,    &
@@ -249,7 +248,7 @@
         brlx,           arlx,           ssh_stress,                     &
         advection,      coriolis,       kridge,         ktransport,     &
         kstrength,      krdg_partic,    krdg_redist,    mu_rdg,         &
-        e_yieldcurve,   e_plasticpot,   visc_method,              &
+        e_yieldcurve,   e_plasticpot,   visc_method,                    &
         maxits_nonlin,  precond,        dim_fgmres,                     &
         dim_pgmres,     maxits_fgmres,  maxits_pgmres,  monitor_nonlin, &
         monitor_fgmres, monitor_pgmres, reltol_nonlin,  reltol_fgmres,  &
@@ -272,7 +271,7 @@
         hs0,            dpscale,         frzpnd,                        &
         tscale_pnd_drain, & 
         rfracmin,       rfracmax,        pndaspect,     hs1,            &
-        hp1
+        hp1,            apnd_sl
 
       namelist /snow_nml/ &
         snwredist,      snwgrain,        rsnw_fall,     rsnw_tmax,      &
@@ -294,7 +293,8 @@
         fyear_init,     ycycle,          wave_spec_file,restart_coszen, &
         atm_data_dir,   ocn_data_dir,    bgc_data_dir,                  &
         atm_data_format, ocn_data_format, rotate_wind,                  &
-        oceanmixed_file, atm_data_version
+        oceanmixed_file, atm_data_version,semi_implicit_Tsfc,           &
+        vapor_flux_correction
 
       !-----------------------------------------------------------------
       ! default values
@@ -382,7 +382,8 @@
       restart_chunksize(:) = 0    ! chunksize for netcdf4
       lcdf64       = .false.      ! 64 bit offset for netCDF
       ice_ic       = 'default'    ! latitude and sst-dependent
-      grid_format  = 'bin'        ! file format ('bin'=binary or 'nc'=netcdf)
+      grid_format  = 'bin'        ! grid format
+         ! ('bin'=binary or 'pop_nc'=pop netcdf or 'mom_nc'=mom netcdf)
       grid_type    = 'rectangular'! define rectangular grid internally
       grid_file    = 'unknown_grid_file'
       grid_ice     = 'B'          ! underlying grid system
@@ -480,6 +481,8 @@
       kridge   = 1             ! -1 = off, 1 = on
       ktransport = 1           ! -1 = off, 1 = on
       calc_Tsfc = .true.       ! calculate surface temperature
+      semi_implicit_Tsfc = .false.  ! surface temperature coupling option based on d(hf)/dTs
+      vapor_flux_correction = .false.  ! mass/enthalpy correction for evaporation/sublimation
       update_ocn_f = .false.   ! include fresh water and salt fluxes for frazil
       cpl_frazil = 'fresh_ice_correction' ! type of coupling for frazil ice
       ustar_min = 0.005        ! minimum friction velocity for ocean heat flux (m/s)
@@ -499,6 +502,7 @@
       rsnw_mlt  = 1500._dbl_kind  ! maximum melting snow grain radius
       kalg      = 0.60_dbl_kind   ! algae absorption coefficient for 0.5 m thick layer
                                   ! 0.5 m path of 75 mg Chl a / m2
+      apnd_sl   = 0.27_dbl_kind   ! equilibrium pond fraction in sealvl ponds
       hp1       = 0.01_dbl_kind   ! critical pond lid thickness for topo ponds
       hs0       = 0.03_dbl_kind   ! snow depth for transition to bare sea ice (m)
       hs1       = 0.03_dbl_kind   ! snow depth for transition to bare pond ice (m)
@@ -1083,6 +1087,7 @@
       call broadcast_scalar(dT_mlt,               master_task)
       call broadcast_scalar(rsnw_mlt,             master_task)
       call broadcast_scalar(kalg,                 master_task)
+      call broadcast_scalar(apnd_sl,              master_task)
       call broadcast_scalar(hp1,                  master_task)
       call broadcast_scalar(hs0,                  master_task)
       call broadcast_scalar(hs1,                  master_task)
@@ -1127,6 +1132,8 @@
       call broadcast_scalar(rotate_wind,          master_task)
       call broadcast_scalar(calc_strair,          master_task)
       call broadcast_scalar(calc_Tsfc,            master_task)
+      call broadcast_scalar(semi_implicit_Tsfc,   master_task)
+      call broadcast_scalar(vapor_flux_correction,master_task)
       call broadcast_scalar(formdrag,             master_task)
       call broadcast_scalar(highfreq,             master_task)
       call broadcast_scalar(natmiter,             master_task)
@@ -1226,6 +1233,9 @@
       if (trim(ice_data_conc) == 'default') ice_data_conc = 'parabolic'
       if (trim(ice_data_dist) == 'default') ice_data_dist = 'uniform'
       if (trim(ice_data_type) == 'default') ice_data_type = 'latsst'
+
+      ! For backward compatibility
+      if (grid_format ==  'nc') grid_format = 'pop_nc'
 
       !-----------------------------------------------------------------
       ! verify inputs
@@ -1462,15 +1472,6 @@
          endif
       endif
 
-      if (evp_algorithm == 'shared_mem_1d' .and. &
-          grid_type     == 'tripole') then
-          if (my_task == master_task) then
-              write(nu_diag,*) subname//' ERROR: evp_algorithm=shared_mem_1d is not tested for gridtype=tripole'
-              write(nu_diag,*) subname//' ERROR: change evp_algorithm to standard_2d'
-          endif
-          abort_list = trim(abort_list)//":49"
-      endif
-
       capping = -9.99e30
       if (kdyn == 1 .or. kdyn == 3) then
          if (capping_method == 'max') then
@@ -1519,6 +1520,13 @@
             write(nu_diag,*) subname//' ERROR: tr_pond_lvl=T and hs0 /= 0'
          endif
          abort_list = trim(abort_list)//":7"
+      endif
+
+      if (semi_implicit_Tsfc .and. tr_pond_topo) then
+         if (my_task == master_task) then
+            write(nu_diag,*)'ERROR: semi_implicit_Tsfc and tr_pond_topo not supported together'
+         endif
+         abort_list = trim(abort_list)//":57"
       endif
 
       if (shortwave(1:4) /= 'dEdd' .and. tr_pond .and. calc_tsfc) then
@@ -1969,11 +1977,13 @@
          write(nu_diag,*) ' '
          write(nu_diag,*) ' Grid, Discretization'
          write(nu_diag,*) '--------------------------------'
+         write(nu_diag,1030) ' grid_format      = ',trim(grid_format)
          tmpstr2 = ' '
          if (trim(grid_type) == 'rectangular')    tmpstr2 = ' : internally defined, rectangular grid'
-         if (trim(grid_type) == 'regional')       tmpstr2 = ' : user-defined, regional grid'
-         if (trim(grid_type) == 'displaced_pole') tmpstr2 = ' : user-defined grid with rotated north pole'
-         if (trim(grid_type) == 'tripole')        tmpstr2 = ' : user-defined grid with northern hemisphere zipper'
+         if (trim(grid_type) == 'regional')       tmpstr2 = ' : grid file, regional grid'
+         if (trim(grid_type) == 'displaced_pole') tmpstr2 = ' : grid file with rotated north pole'
+         if (trim(grid_type) == 'tripole')        tmpstr2 = ' : grid file with northern hemisphere zipper'
+         if (trim(grid_type) == 'latlon')         tmpstr2 = ' : cesm latlon domain file'
          write(nu_diag,1030) ' grid_type        = ',trim(grid_type),trim(tmpstr2)
          write(nu_diag,1030) ' grid_ice         = ',trim(grid_ice)
          write(nu_diag,1030) '   grid_ice_thrm  = ',trim(grid_ice_thrm)
@@ -2304,6 +2314,8 @@
          write(nu_diag,1010) ' rotate_wind      = ', rotate_wind,' : rotate wind/stress to computational grid'
          write(nu_diag,1010) ' formdrag         = ', formdrag,' : use form drag parameterization'
          write(nu_diag,1000) ' iceruf           = ', iceruf, ' : ice surface roughness at atmosphere interface (m)'
+         write(nu_diag,1010) ' semi_implicit_Tsfc    = ', semi_implicit_Tsfc,' : surface temperature coupling option based on d(hf)/dTs'
+         write(nu_diag,1010) ' vapor_flux_correction = ', vapor_flux_correction,' : mass/enthalpy correction for evaporation/sublimation'
          if (trim(atmbndy) == 'constant') then
             tmpstr2 = ' : constant-based boundary layer'
          elseif (trim(atmbndy) == 'similarity' .or. &
@@ -2440,9 +2452,11 @@
             write(nu_diag,1002) ' hs1              = ', hs1,' : snow depth of transition to pond ice'
          elseif (tr_pond_topo) then
             write(nu_diag,1010) ' tr_pond_topo     = ', tr_pond_topo,' : topo pond formulation'
+            write(nu_diag,*) '     WARNING: dpnd history fields are turned off for topo ponds'
             write(nu_diag,1002) ' hp1              = ', hp1,' : critical ice lid thickness for topo ponds'
          elseif (tr_pond_sealvl) then
             write(nu_diag,1010) ' tr_pond_sealvl   = ', tr_pond_sealvl,' : sealvl pond formulation'
+            write(nu_diag,1002) ' apnd_sl          = ', apnd_sl,' : equilibrium pond fraction'
          elseif (trim(shortwave) == 'ccsm3') then
             write(nu_diag,*) 'Pond effects on radiation are treated implicitly in the ccsm3 shortwave scheme'
          else
@@ -2702,11 +2716,19 @@
 
       endif                     ! my_task = master_task
 
+      if (grid_format /=  'pop_nc'        .and. &
+          grid_format /=  'mom_nc'        .and. &
+          grid_format /=  'geosnc'        .and. &
+          grid_format /=  'meshnc'        .and. &
+          grid_format /=  'bin' ) then
+         if (my_task == master_task) write(nu_diag,*) subname//' ERROR: unknown grid_format=',trim(grid_type)
+         abort_list = trim(abort_list)//":67"
+      endif
+
       if (grid_type  /=  'displaced_pole' .and. &
           grid_type  /=  'tripole'        .and. &
           grid_type  /=  'column'         .and. &
           grid_type  /=  'rectangular'    .and. &
-          grid_type  /=  'cpom_grid'      .and. &
           grid_type  /=  'regional'       .and. &
           grid_type  /=  'latlon') then
          if (my_task == master_task) write(nu_diag,*) subname//' ERROR: unknown grid_type=',trim(grid_type)
@@ -2726,14 +2748,16 @@
           kmt_type  /=  'channel_onenorth' .and. &
           kmt_type  /=  'wall'    .and. &
           kmt_type  /=  'default' .and. &
-          kmt_type  /=  'boxislands') then
+          kmt_type  /=  'boxislands'.and. &
+          kmt_type  /=  'none' ) then
          if (my_task == master_task) write(nu_diag,*) subname//' ERROR: unknown kmt_type=',trim(kmt_type)
          abort_list = trim(abort_list)//":27"
       endif
 
       if (grid_type  /=  'column'      .and. &
           grid_type  /=  'rectangular' .and. &
-          kmt_type   /=  'file') then
+          kmt_type   /=  'file' .and. &
+          kmt_type   /=  'none') then
          if (my_task == master_task) write(nu_diag,*) subname//' ERROR: need kmt file, kmt_type=',trim(kmt_type)
          abort_list = trim(abort_list)//":28"
       endif
@@ -2764,8 +2788,9 @@
          atmbndy_in=atmbndy, calc_strair_in=calc_strair, formdrag_in=formdrag, highfreq_in=highfreq, &
          kitd_in=kitd, kcatbound_in=kcatbound, hs0_in=hs0, dpscale_in=dpscale, frzpnd_in=frzpnd, &
          rfracmin_in=rfracmin, rfracmax_in=rfracmax, pndaspect_in=pndaspect, hs1_in=hs1, hp1_in=hp1, &
-         ktherm_in=ktherm, calc_Tsfc_in=calc_Tsfc, conduct_in=conduct, &
-         a_rapid_mode_in=a_rapid_mode, Rac_rapid_mode_in=Rac_rapid_mode, &
+         apnd_sl_in=apnd_sl, &
+         ktherm_in=ktherm, calc_Tsfc_in=calc_Tsfc, conduct_in=conduct, semi_implicit_Tsfc_in=semi_implicit_Tsfc, &
+         a_rapid_mode_in=a_rapid_mode, Rac_rapid_mode_in=Rac_rapid_mode, vapor_flux_correction_in=vapor_flux_correction, &
          floediam_in=floediam, hfrazilmin_in=hfrazilmin, Tliquidus_max_in=Tliquidus_max, &
          aspect_rapid_mode_in=aspect_rapid_mode, dSdt_slow_mode_in=dSdt_slow_mode, &
          phi_c_slow_mode_in=phi_c_slow_mode, phi_i_mushy_in=phi_i_mushy, conserv_check_in=conserv_check, &
@@ -3391,7 +3416,7 @@
 
          elseif (trim(ice_data_type) == 'uniform' .or. trim(ice_data_type) == 'box2001') then
             ! all cells not land mask are ice
-            ! box2001 used to have a check for west of 50W, this was changed, so now box2001 is 
+            ! box2001 used to have a check for west of 50W, this was changed, so now box2001 is
             ! the same as uniform.  keep box2001 option for backwards compatibility.
             icells = 0
             do j = jlo, jhi
