@@ -649,7 +649,7 @@
       use ice_calendar, only: yday
       use ice_domain_size, only: ncat, nilyr, nslyr, nblyr
       use ice_flux, only: fresh, frain, fpond, frzmlt, frazil, frz_onset, &
-          fsalt, Tf, sss, salinz, fhocn, rsiden, wlat, &
+          fsalt, Tf, sss, Tair, salinz, fhocn, rsiden, wlat, &
           meltl, frazil_diag, dpnd_melt
       use ice_flux_bgc, only: flux_bio, faero_ocn, &
           fiso_ocn, HDO_ocn, H2_16O_ocn, H2_18O_ocn
@@ -727,6 +727,7 @@
                       nt_strata   = nt_strata  (:,:),        &
                       Tf          = Tf         (i,j,  iblk), &
                       sss         = sss        (i,j,  iblk), &
+                      Tair        = Tair       (i,j,  iblk), &
                       salinz      = salinz     (i,j,:,iblk), &
                       rsiden      = rsiden     (i,j,:,iblk), &
                       meltl       = meltl      (i,j,  iblk), &

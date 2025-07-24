@@ -681,23 +681,6 @@
          stat=ierr)
       if (ierr/=0) call abort_ice('(alloc_flux): Out of memory (ponds)')
 
-      allocate( &
-         flpnd      (nx_block,ny_block,max_blocks), & ! pond flushing rate due to ice permeability (m/step)
-         expnd      (nx_block,ny_block,max_blocks), & ! exponential pond drainage rate (m/step) 
-         frpnd      (nx_block,ny_block,max_blocks), & ! pond drainage rate due to freeboard constraint (m/step)
-         rfpnd      (nx_block,ny_block,max_blocks), & ! runoff rate due to rfrac (m/step)
-         ilpnd      (nx_block,ny_block,max_blocks), & ! pond loss/gain (+/-) to ice lid freezing/melting (m/step)
-         mipnd      (nx_block,ny_block,max_blocks), & ! pond 'drainage' due to ice melting (m / step)
-         rdpnd      (nx_block,ny_block,max_blocks), & ! pond 'drainage' due to ridging (m)
-         flpndn     (nx_block,ny_block,ncat,max_blocks), & ! category pond flushing rate due to ice permeability (m/step)
-         expndn     (nx_block,ny_block,ncat,max_blocks), & ! category exponential pond drainage rate (m/step) 
-         frpndn     (nx_block,ny_block,ncat,max_blocks), & ! category pond drainage rate due to freeboard constraint (m/step)
-         rfpndn     (nx_block,ny_block,ncat,max_blocks), & ! category runoff rate due to rfrac (m/step)
-         ilpndn     (nx_block,ny_block,ncat,max_blocks), & ! category pond loss/gain (+/-) to ice lid freezing/melting (m/step)
-         stat=ierr)
-
-      if (ierr/=0) call abort_ice('(alloc_flux): Out of memory')
-
       end subroutine alloc_flux
 
 !=======================================================================

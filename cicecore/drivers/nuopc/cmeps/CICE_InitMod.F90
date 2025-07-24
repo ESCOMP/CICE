@@ -13,7 +13,6 @@ module CICE_InitMod
   use icepack_intfc, only: icepack_warnings_flush, icepack_warnings_aborted
   use icepack_intfc, only: icepack_query_parameters, icepack_query_tracer_flags
   use icepack_intfc, only: icepack_query_tracer_indices, icepack_query_tracer_sizes
-  use icepack_intfc, only: icepack_init_sealvlpnd
 
   implicit none
   private
@@ -185,8 +184,6 @@ contains
     call icepack_warnings_flush(nu_diag)
     if (icepack_warnings_aborted()) call abort_ice(trim(subname), &
        file=__FILE__,line= __LINE__)
-    ! This must be called before init_shortwave
-    if (tr_pond_sealvl) call icepack_init_sealvlpnd   ! sealvl ponds
 
     ! Initialize shortwave components using swdn from previous timestep
     ! if restarting. These components will be scaled to current forcing
