@@ -1224,6 +1224,11 @@
          status = nf90_get_att(fid, varid, "_FillValue", missingvalue)
 !          call ice_check_nc(status, subname//' ERROR: Missing _FillValue', &
 !                            file=__FILE__, line=__LINE__)
+         if (isnan(missingvalue)) then
+            ! ' _FillValue not defined, resetting to spval_dbl
+            ! this is only needed for the logging statement below'
+            missingvalue =  spval_dbl
+         endif
 !         write(nu_diag,*) subname,' missingvalue= ',missingvalue
          allocate(mask(nx,ny))
          if ( ieee_is_nan(missingvalue) ) then
