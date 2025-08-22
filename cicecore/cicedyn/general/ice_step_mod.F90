@@ -419,6 +419,7 @@
                       zqsn         = trcrn       (i,j,nt_qsno:nt_qsno+nslyr-1,:,iblk),   &
                       zqin         = trcrn       (i,j,nt_qice:nt_qice+nilyr-1,:,iblk),   &
                       zSin         = trcrn       (i,j,nt_sice:nt_sice+nilyr-1,:,iblk),   &
+                      afsdn        = trcrn       (i,j,nt_fsd :nt_fsd +nfsd-1, :,iblk),   &
                       alvl         = trcrn       (i,j,nt_alvl,:,iblk),                   &
                       vlvl         = trcrn       (i,j,nt_vlvl,:,iblk),                   &
                       apnd         = trcrn       (i,j,nt_apnd,:,iblk),                   &

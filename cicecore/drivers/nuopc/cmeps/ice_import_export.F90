@@ -94,6 +94,7 @@ module ice_import_export
   type (fld_list_type)     :: fldsToIce(fldsMax)
   type (fld_list_type)     :: fldsFrIce(fldsMax)
 
+  logical                  :: flds_wave           ! wave ice coupling
   integer     , parameter  :: io_dbug = 10        ! i/o debug messages
   character(*), parameter  :: u_FILE_u = &
        __FILE__
@@ -116,7 +117,6 @@ contains
     character(char_len) :: stdname
     character(char_len) :: cvalue
     logical             :: flds_wiso         ! use case
-    logical             :: flds_wave         ! use case
     logical             :: isPresent, isSet
     character(len=*), parameter :: subname='(ice_import_export:ice_advertise_fields)'
     !-------------------------------------------------------------------------------
@@ -980,7 +980,7 @@ contains
              ! surface temperature
              Tsrf(i,j,iblk)  = Tffresh + trcr(i,j,1,iblk)     !Kelvin (original ???)
 
-             if (tr_fsd) then
+             if (flds_wave) then
                 ! floe thickness (m)
                 if (aice(i,j,iblk) > puny) then
                    floethick(i,j,iblk) = vice(i,j,iblk) / aice(i,j,iblk)
@@ -988,17 +988,22 @@ contains
                    floethick(i,j,iblk) = c0
                 end if
 
-                ! floe diameter (m)
-                workx = c0
-                worky = c0
-                do n = 1, ncat
-                   do k = 1, nfsd
-                      workx = workx + floe_rad_c(k) * aicen_init(i,j,n,iblk) * trcrn(i,j,nt_fsd+k-1,n,iblk)
-                      worky = worky + aicen_init(i,j,n,iblk) * trcrn(i,j,nt_fsd+k-1,n,iblk)
+                if (tr_fsd) then
+                   ! floe diameter (m)
+                   workx = c0
+                   worky = c0
+                   do n = 1, ncat
+                      do k = 1, nfsd
+                         workx = workx + floe_rad_c(k) * aicen_init(i,j,n,iblk) * trcrn(i,j,nt_fsd+k-1,n,iblk)
+                         worky = worky + aicen_init(i,j,n,iblk) * trcrn(i,j,nt_fsd+k-1,n,iblk)
+                      end do
                    end do
-                end do
-                if (worky > c0) workx = c2*workx / worky
-                floediam(i,j,iblk) = MAX(c2*floe_rad_c(1),workx)
+                   if (worky > c0) workx = c2*workx / worky
+                   floediam(i,j,iblk) = MAX(c2*floe_rad_c(1),workx)
+                else ! with FSD off
+                   ! floe diameter (m)
+                   floediam(i,j,iblk) = 50.0_dbl_kind
+                endif
              endif
 
              ! wind stress  (on POP T-grid:  convert to lat-lon)
