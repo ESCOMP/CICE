@@ -628,7 +628,7 @@
       phi_i_mushy       =    0.85_dbl_kind ! liquid fraction of congelation ice
       Tliquidus_max     =    0.00_dbl_kind ! maximum liquidus temperature of mush (C)
 
-      floediam          =   300.0_dbl_kind ! min thickness of new frazil ice (m)
+      floediam          =    50.0_dbl_kind ! min thickness of new frazil ice (m)
       hfrazilmin        =    0.05_dbl_kind ! effective floe diameter (m)
 
       ! shortwave redistribution in the thermodynamics
