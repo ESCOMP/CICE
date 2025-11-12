@@ -274,19 +274,6 @@ cat >> ${jobfile} << EOFB
 ##SBATCH --qos=standby
 EOFB
 
-else if (${ICE_MACHINE} =~ discover*) then
-cat >> ${jobfile} << EOFB
-#SBATCH -J ${ICE_CASENAME}
-#SBATCH -t ${ICE_RUNLENGTH}
-#SBATCH -A ${acct}
-#SBATCH -N ${nnodes}
-#SBATCH -e slurm%j.err
-#SBATCH -o slurm%j.out
-###SBATCH --mail-type END,FAIL
-###SBATCH --mail-user=eclare@lanl.gov
-#SBATCH --qos=debug
-EOFB
-
 else if (${ICE_MACHINE} =~ fram*) then
 cat >> ${jobfile} << EOFB
 #SBATCH -J ${ICE_CASENAME}
@@ -379,12 +366,21 @@ cat >> ${jobfile} << EOFB
 #PBS -l walltime=${batchtime}
 EOFB
 
+else if (${ICE_MACHINE} =~ boreas* ) then
+cat >> ${jobfile} << EOFB
+#PBS -N ${ICE_CASENAME}
+#PBS -j oe
+#PBS -q ${queue}
+#PBS -l select=${nnodes}:ncpus=${corespernode}:mpiprocs=${taskpernodelimit}:ompthreads=${nthrds}
+#PBS -l walltime=${batchtime}
+EOFB
+
 else if (${ICE_MACHINE} =~ gaeac5*) then
 cat >> ${jobfile} << EOFB
 #SBATCH -J ${ICE_CASENAME}
 #SBATCH --partition=batch
 #SBATCH --qos=${queue}
-#SBATCH --account=nggps_emc
+#SBATCH --account=${acct}
 #SBATCH --clusters=c5
 #SBATCH --time=${batchtime}
 #SBATCH --nodes=${nnodes}
@@ -401,7 +397,7 @@ cat >> ${jobfile} << EOFB
 #SBATCH -J ${ICE_CASENAME}
 #SBATCH --partition=batch
 #SBATCH --qos=${queue}
-#SBATCH --account=sfs_emc
+#SBATCH --account=${acct}
 #SBATCH --clusters=c6
 #SBATCH --time=${batchtime}
 #SBATCH --nodes=${nnodes}
@@ -427,6 +423,34 @@ cat >> ${jobfile} << EOFB
 #SBATCH -o slurm%j.out
 ##SBATCH --mail-type FAIL
 ##SBATCH --mail-user=xxx@noaa.gov
+EOFB
+
+else if (${ICE_MACHINE} =~ ursa*) then
+cat >> ${jobfile} << EOFB
+#SBATCH -J ${ICE_CASENAME}
+#SBATCH --partition=u1-compute
+#SBATCH --qos=${queue}
+#SBATCH -A ${acct}
+#SBATCH --time=${batchtime}
+#SBATCH --nodes=${nnodes}
+#SBATCH --ntasks-per-node=${taskpernodelimit}
+#SBATCH --cpus-per-task=${nthrds}
+#SBATCH -e slurm%j.err
+#SBATCH -o slurm%j.out
+##SBATCH --mail-type FAIL
+##SBATCH --mail-user=xxx@noaa.gov
+EOFB
+
+else if (${ICE_MACHINE} =~ wcoss2*) then
+cat >> ${jobfile} << EOFB
+#PBS -N ${ICE_CASENAME}
+#PBS -o ${ICE_CASENAME}
+#PBS -j oe 
+#PBS -A ICE-DEV
+#PBS -l walltime=${batchtime}
+##PBS -l select=${nnodes}:ncpus=${taskpernodelimit}
+##PBS -l select=${nnodes}:ncpus=${corespernode}:mpiprocs=${taskpernodelimit}:ompthreads=${nthrds}
+#PBS -l place=vscatter,select=${nnodes}:ncpus=${corespernode}:mpiprocs=${corespernode}:mem=256M
 EOFB
 
 else if (${ICE_MACHINE} =~ orion*) then

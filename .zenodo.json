@@ -1,19 +1,22 @@
 {
-    "license": "other-open", 
+    "license": "BSD-3-Clause",
+    "copyright": "Copyright 1998-2025 Triad National Security, LLC",
     "description": "View detailed release notes at https://github.com/CICE-Consortium/CICE/releases", 
     "language": "eng", 
-    "title": "CICE-Consortium/CICE: CICE Version 6.6.1", 
+    "title": "CICE-Consortium/CICE: CICE Version 6.6.2", 
     "keywords": [
-        "sea ice model, CICE, Icepack"
+        "sea ice model",
+        "CICE",
+        "Icepack"
     ], 
-    "version": "6.6.1", 
+    "version": "6.6.2", 
     "upload_type": "software", 
     "communities": [
         {
             "identifier": "cice-consortium"
         }
     ], 
-    "publication_date": "2025-05-21", 
+    "publication_date": "2025-08-15", 
     "creators": [
         {
             "affiliation": "Los Alamos National Laboratory", 
@@ -36,7 +39,7 @@
             "name": "David Clemens-Sewall"
         }, 
         {
-            "affiliation": "National Oceanographic and Atmospheric Administration (CTR)", 
+            "affiliation": "National Oceanic and Atmospheric Administration (CTR)",
             "name": "Anthony Craig"
         }, 
         {
@@ -52,7 +55,7 @@
             "name": "Jim Edwards"
         }, 
         {
-            "affiliation": "National Oceanographic and Atmospheric Administration", 
+            "affiliation": "National Oceanic and Atmospheric Administration",
             "name": "Robert Grumbine"
         }, 
         {
@@ -106,15 +109,15 @@
         {
             "affiliation": "Geophysical Fluid Dynamics Laboratory", 
             "name": "Michael Winton"
-        }
+        }, 
         {
-            "affiliation": "National Oceanographic and Atmospheric Administration", 
+            "affiliation": "National Oceanic and Atmospheric Administration",
             "name": "Denise Worthen"
         }, 
         {
             "affiliation": "National Aeronautics and Space Administration", 
             "name": "Bin Zhao"
-        }, 
+        }
     ], 
     "access_right": "open", 
     "repository_url": "https://github.com/CICE-Consortium/CICE", 
