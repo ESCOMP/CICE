@@ -266,10 +266,13 @@ contains
     ! ice/ocn fluxes computed by ice
     call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_melth'     )
     call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen'     )
-    call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_vdr' )
-    call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_vdf' )
-    call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_idr' )
-    call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_idf' )
+
+    if (.not.prescribed_ice) then
+       call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_vdr' )
+       call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_vdf' )
+       call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_idr' )
+       call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_idf' )
+    endif
 
     if (send_i2x_per_cat) then
        call fldlist_add(fldsFrIce_num, fldsFrIce, 'Fioi_swpen_ifrac_n', &
@@ -1220,6 +1223,8 @@ contains
          areacor=mod2med_areacor, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    if (.not.prescribed_ice) then
+
     ! flux of vis dir shortwave through ice to ocean
     call state_setexport(exportState, 'Fioi_swpen_vdr' , input=fswthru_vdr, lmask=tmask, ifrac=ailohi, &
          areacor=mod2med_areacor, rc=rc)
@@ -1239,6 +1244,8 @@ contains
     call state_setexport(exportState, 'Fioi_swpen_idf' , input=fswthru_idf, lmask=tmask, ifrac=ailohi, &
          areacor=mod2med_areacor, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    endif
 
     ! flux of heat exchange with ocean
     call state_setexport(exportState, 'Fioi_melth' , input=fhocn, lmask=tmask, ifrac=ailohi, &
