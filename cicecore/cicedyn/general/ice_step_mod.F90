@@ -678,12 +678,16 @@
          tr_fsd,          & ! floe size distribution tracers
          z_tracers          ! vertical biogeochemistry
 
+      character (len=char_len) :: &
+         wave_height_type ! type of significant wave height forcing
+
       type (block) :: &
          this_block         ! block information for current block
 
       character(len=*), parameter :: subname = '(step_therm2)'
 
-      call icepack_query_parameters(z_tracers_out=z_tracers)
+      call icepack_query_parameters(z_tracers_out=z_tracers, &
+                                    wave_height_type_out=wave_height_type)
       call icepack_query_tracer_sizes(ntrcr_out=ntrcr, nbtrcr_out=nbtrcr)
       call icepack_query_tracer_flags(tr_fsd_out=tr_fsd)
       call icepack_warnings_flush(nu_diag)
@@ -708,9 +712,11 @@
 
          if (tmask(i,j,iblk) .or. opmask(i,j,iblk)) then
 
-         ! significant wave height for FSD
-         if (tr_fsd) &
-         wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
+         ! significant wave height
+         if (tr_fsd .and. trim(wave_height_type) == 'internal') then
+            wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
+         ! else wave_sig_ht = 0 unless provided by coupler or other external data
+         endif
 
          call icepack_step_therm2(dt=dt,                     &
                       hin_max     = hin_max    (:),          &
@@ -755,7 +761,6 @@
                       wave_spectrum = &
                                   wave_spectrum(i,j,:,iblk), &
                       wavefreq    = wavefreq   (:),          &
-                      dwavefreq   = dwavefreq  (:),          &
                       d_afsd_latg = d_afsd_latg(i,j,:,iblk), &
                       d_afsd_newi = d_afsd_newi(i,j,:,iblk), &
                       d_afsd_latm = d_afsd_latm(i,j,:,iblk), &
@@ -896,7 +901,7 @@
 
       subroutine step_dyn_wave (dt)
 
-      use ice_arrays_column, only: wave_spectrum, &
+      use ice_arrays_column, only: wave_spectrum, wave_sig_ht, &
           d_afsd_wave, wavefreq, dwavefreq
       use ice_domain_size, only: ncat, nfreq
       use ice_state, only: trcrn, aicen, aice, vice
@@ -916,14 +921,11 @@
          iblk,            & ! block index
          i, j               ! horizontal indices
 
-      character (len=char_len) :: wave_spec_type
-
       character(len=*), parameter :: subname = '(step_dyn_wave)'
 
       call ice_timer_start(timer_column)
       call ice_timer_start(timer_fsd)
 
-      call icepack_query_parameters(wave_spec_type_out=wave_spec_type)
       call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
@@ -951,8 +953,7 @@
                                             trcrn          (i,j,:,:,iblk), &
                                             d_afsd_wave    (i,j,:,  iblk))
             else
-            call icepack_step_wavefracture(wave_spec_type = wave_spec_type,             &
-                                           dt = dt, nfreq = nfreq,                      &
+            call icepack_step_wavefracture(dt = dt, nfreq = nfreq,                      &
                                            aice        = aice           (i,j,    iblk), &
                                            vice        = vice           (i,j,    iblk), &
                                            aicen       = aicen          (i,j,:,  iblk), &
@@ -960,7 +961,8 @@
                                            wavefreq    = wavefreq       (:),            &
                                            dwavefreq   = dwavefreq      (:),            &
                                            trcrn       = trcrn          (i,j,:,:,iblk), &
-                                           d_afsd_wave = d_afsd_wave    (i,j,:,  iblk))
+                                           d_afsd_wave = d_afsd_wave    (i,j,:,  iblk), &
+                                           wave_height = wave_sig_ht    (i,j,    iblk))
             endif
          end do ! i
          end do ! j
