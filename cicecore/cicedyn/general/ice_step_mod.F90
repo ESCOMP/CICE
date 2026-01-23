@@ -942,6 +942,7 @@
          do j = jlo, jhi
          do i = ilo, ihi
             d_afsd_wave(i,j,:,iblk) = c0
+            if (wave_height_type == 'internal' ) then
             call icepack_step_wavefracture_alt (dt = dt,nfreq = nfreq,                       &
                                                 aice        = aice           (i,j,    iblk), &
                                                 vice        = vice           (i,j,    iblk), &
@@ -952,16 +953,18 @@
                                                 trcrn       = trcrn          (i,j,:,:,iblk), &
                                                 d_afsd_wave = d_afsd_wave    (i,j,:,  iblk), &
                                                 wave_height = wave_sig_ht    (i,j,    iblk))
-!           call icepack_step_wavefracture(dt = dt, nfreq = nfreq,                      &
-!                                          aice        = aice           (i,j,    iblk), &
-!                                          vice        = vice           (i,j,    iblk), &
-!                                          aicen       = aicen          (i,j,:,  iblk), &
-!                                          wave_spectrum = wave_spectrum(i,j,:,  iblk), &
-!                                          wavefreq    = wavefreq       (:),            &
-!                                          dwavefreq   = dwavefreq      (:),            &
-!                                          trcrn       = trcrn          (i,j,:,:,iblk), &
-!                                          d_afsd_wave = d_afsd_wave    (i,j,:,  iblk), &
-!                                          wave_height = wave_sig_ht    (i,j,    iblk))
+            else
+            call icepack_step_wavefracture(dt = dt, nfreq = nfreq,                      &
+                                           aice        = aice           (i,j,    iblk), &
+                                           vice        = vice           (i,j,    iblk), &
+                                           aicen       = aicen          (i,j,:,  iblk), &
+                                           wave_spectrum = wave_spectrum(i,j,:,  iblk), &
+                                           wavefreq    = wavefreq       (:),            &
+                                           dwavefreq   = dwavefreq      (:),            &
+                                           trcrn       = trcrn          (i,j,:,:,iblk), &
+                                           d_afsd_wave = d_afsd_wave    (i,j,:,  iblk), &
+                                           wave_height = wave_sig_ht    (i,j,    iblk))
+             endif
          end do ! i
          end do ! j
       end do    ! iblk
