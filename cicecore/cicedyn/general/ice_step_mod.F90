@@ -921,10 +921,15 @@
          iblk,            & ! block index
          i, j               ! horizontal indices
 
+      character (len=char_len) :: &
+         wave_height_type ! type of significant wave height forcing
+
       character(len=*), parameter :: subname = '(step_dyn_wave)'
 
       call ice_timer_start(timer_column)
       call ice_timer_start(timer_fsd)
+
+      call icepack_query_parameters(wave_height_type_out=wave_height_type)
 
       call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
@@ -942,7 +947,7 @@
          do j = jlo, jhi
          do i = ilo, ihi
             d_afsd_wave(i,j,:,iblk) = c0
-            if (wave_height_type == 'internal' ) then
+            if (wave_height_type == 'internal') then
             call icepack_step_wavefracture_alt (dt = dt,nfreq = nfreq,                       &
                                                 aice        = aice           (i,j,    iblk), &
                                                 vice        = vice           (i,j,    iblk), &
