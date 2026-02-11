@@ -74,7 +74,7 @@
           istep0, histfreq, histfreq_n, histfreq_base, &
           dumpfreq, dumpfreq_n, diagfreq, dumpfreq_base, &
           npt, dt, ndtd, days_per_year, use_leap_years, &
-          write_ic, dump_last, npt_unit
+          write_ic, dump_last, npt_unit, write_histrest
       use ice_arrays_column, only: oceanmixed_ice
       use ice_restart_column, only: &
           restart_age, restart_FY, restart_lvl, &
@@ -163,7 +163,8 @@
         kitd, kcatbound, ktransport
 
       character (len=char_len) :: shortwave, albedo_type, conduct, fbot_xfer_type, &
-        tfrz_option, saltflux_option, frzpnd, atmbndy, wave_spec_type, snwredist, snw_aging_table, &
+        tfrz_option, saltflux_option, frzpnd, atmbndy, wave_spec_type, wave_height_type, &
+        snwredist, snw_aging_table, &
         congel_freeze, capping_method, snw_ssp_table
 
       logical (kind=log_kind) :: calc_Tsfc, formdrag, highfreq, calc_strair, wave_spec, &
@@ -197,7 +198,7 @@
         ice_ic,         restart,        restart_dir,     restart_file,  &
         restart_ext,    use_restart_time, restart_format, lcdf64,       &
         restart_root,   restart_stride, restart_iotasks, restart_rearranger, &
-        restart_deflate, restart_chunksize, restart_mod,                &
+        restart_deflate, restart_chunksize, restart_mod, write_histrest,&
         pointer_file,   dumpfreq,       dumpfreq_n,      dump_last,     &
         diagfreq,       diag_type,      diag_file,       history_format,&
         history_root,   history_stride, history_iotasks, history_rearranger, &
@@ -287,7 +288,8 @@
         fbot_xfer_type, update_ocn_f,    l_mpond_fresh, tfrz_option,    &
         saltflux_option,ice_ref_salinity,cpl_frazil,    congel_freeze,  &
         oceanmixed_ice, restore_ice,     restore_ocn,   trestore,       &
-        precip_units,   default_season,  wave_spec_type,nfreq,          &
+        precip_units,   default_season,                                 &
+        wave_spec_type, nfreq,           wave_height_type,              &
         atm_data_type,  ocn_data_type,   bgc_data_type, fe_data_type,   &
         ice_data_type,  ice_data_conc,   ice_data_dist,                 &
         fyear_init,     ycycle,          wave_spec_file,restart_coszen, &
@@ -359,6 +361,7 @@
       history_deflate = 0    ! compression level for netcdf4
       history_chunksize(:) = 0 ! chunksize for netcdf4
       write_ic = .false.     ! write out initial condition
+      write_histrest = .true.! write out history restart files if needed
       cpl_bgc = .false.      ! couple bgc thru driver
       incond_dir = history_dir ! write to history dir for default
       incond_file = 'iceh_ic'! file prefix
@@ -559,6 +562,7 @@
       saltflux_option = 'constant'    ! saltflux calculation
       ice_ref_salinity = 4.0_dbl_kind ! Ice reference salinity for coupling
       oceanmixed_ice  = .false.   ! if true, use internal ocean mixed layer
+      wave_height_type= 'internal'! type of wave height forcing
       wave_spec_type  = 'none'    ! type of wave spectrum forcing
       nfreq           = 25        ! number of wave frequencies
       wave_spec_file  = ' '       ! wave forcing file name
@@ -994,6 +998,7 @@
       call broadcast_scalar(history_deflate,      master_task)
       call broadcast_array(history_chunksize,     master_task)
       call broadcast_scalar(write_ic,             master_task)
+      call broadcast_scalar(write_histrest,       master_task)
       call broadcast_scalar(cpl_bgc,              master_task)
       call broadcast_scalar(incond_dir,           master_task)
       call broadcast_scalar(incond_file,          master_task)
@@ -1174,6 +1179,7 @@
       call broadcast_scalar(fbot_xfer_type,       master_task)
       call broadcast_scalar(precip_units,         master_task)
       call broadcast_scalar(oceanmixed_ice,       master_task)
+      call broadcast_scalar(wave_height_type,     master_task)
       call broadcast_scalar(wave_spec_type,       master_task)
       call broadcast_scalar(wave_spec_file,       master_task)
       call broadcast_scalar(nfreq,                master_task)
@@ -1259,7 +1265,8 @@
       if (trim(ice_data_type) == 'default') ice_data_type = 'latsst'
 
       ! For backward compatibility
-      if (grid_format ==  'nc') grid_format = 'pop_nc'
+      if (grid_format ==  'nc'    ) grid_format = 'pop_nc'
+      if (grid_format ==  'nc_ext') grid_format = 'pop_nc_ext'
 
       !-----------------------------------------------------------------
       ! verify inputs
@@ -1915,12 +1922,23 @@
          file=__FILE__, line=__LINE__)
 
       wave_spec = .false.
-      if (tr_fsd .and. (trim(wave_spec_type) /= 'none')) wave_spec = .true.
-      if (tr_fsd .and. (trim(wave_spec_type) == 'none')) then
-            if (my_task == master_task) then
-               write(nu_diag,*) subname//' WARNING: tr_fsd=T but wave_spec=F - not recommended'
+      if (tr_fsd) then
+         if (trim(wave_spec_type) /= 'none') then
+            if (trim(wave_height_type) /= 'none') wave_spec = .true.
+            if (trim(wave_height_type) /= 'internal') then
+               ! wave_height_type=coupled is not yet implemented in CICE
+               write (nu_diag,*) 'WARNING: set wave_height_type=internal'
+               call abort_ice(error_message=subname//'Wave configuration', &
+                              file=__FILE__, line=__LINE__)
             endif
-      end if
+         endif
+         if (.not.(wave_spec)) then
+            write (nu_diag,*) 'WARNING: tr_fsd=T but wave_spec=F - not recommended'
+            if (trim(wave_height_type) /= 'none') then
+               write (nu_diag,*) 'WARNING: Wave_spec=F, wave_height_type/=none, wave_sig_ht = 0'
+            endif
+         endif
+      endif
 
       ! compute grid locations for thermo, u and v fields
 
@@ -2465,6 +2483,14 @@
                write(nu_diag,1030) ' wave_spec_type   = ', trim(wave_spec_type),trim(tmpstr2)
             endif
             write(nu_diag,1020) ' nfreq            = ', nfreq,' : number of wave spectral forcing frequencies'
+            if (trim(wave_height_type) == 'internal') then
+               tmpstr2 = ' : use internally generated wave height'
+            elseif (trim(wave_height_type) == 'coupled') then
+               tmpstr2 = ' : use wave height from external coupled model'
+            elseif (trim(wave_height_type) == 'none') then
+               tmpstr2 = ' : no wave height data available, default==0'
+            endif
+            write(nu_diag,1030) ' wave_height_type = ', trim(wave_height_type),trim(tmpstr2)
          endif
 
          write(nu_diag,*) ' '
@@ -2672,6 +2698,7 @@
          write(nu_diag,1031) ' restart_file     = ', trim(restart_file)
          write(nu_diag,1031) ' pointer_file     = ', trim(pointer_file)
          write(nu_diag,1011) ' use_restart_time = ', use_restart_time
+         write(nu_diag,1011) ' write_histrest   = ', write_histrest
          write(nu_diag,1031) ' ice_ic           = ', trim(ice_ic)
          if (trim(grid_type) /= 'rectangular' .or. &
              trim(grid_type) /= 'column') then
@@ -2757,6 +2784,7 @@
       endif                     ! my_task = master_task
 
       if (grid_format /=  'pop_nc'        .and. &
+          grid_format /=  'pop_nc_ext'    .and. &
           grid_format /=  'mom_nc'        .and. &
           grid_format /=  'geosnc'        .and. &
           grid_format /=  'meshnc'        .and. &
@@ -2835,6 +2863,7 @@
          aspect_rapid_mode_in=aspect_rapid_mode, dSdt_slow_mode_in=dSdt_slow_mode, &
          phi_c_slow_mode_in=phi_c_slow_mode, phi_i_mushy_in=phi_i_mushy, conserv_check_in=conserv_check, &
          wave_spec_type_in = wave_spec_type, wave_spec_in=wave_spec, nfreq_in=nfreq, &
+         wave_height_type_in = wave_height_type, &
          update_ocn_f_in=update_ocn_f, cpl_frazil_in=cpl_frazil, congel_freeze_in=congel_freeze, &
          tfrz_option_in=tfrz_option, kalg_in=kalg, fbot_xfer_type_in=fbot_xfer_type, &
          saltflux_option_in=saltflux_option, ice_ref_salinity_in=ice_ref_salinity, &
