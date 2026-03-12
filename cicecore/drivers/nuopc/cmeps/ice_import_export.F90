@@ -1203,13 +1203,13 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Fix outgoing longwave if aice_init = 0, but aice > 0.
-    tempfld(:,:,:) = flwout(:,:,:)
     do iblk = 1, nblocks
        this_block = get_block(blocks_ice(iblk),iblk)
        ilo = this_block%ilo
        ihi = this_block%ihi
        jlo = this_block%jlo
        jhi = this_block%jhi
+       tempfld(:,:,iblk) = flwout(:,:,iblk)
        do j = jlo, jhi
           do i = ilo, ihi
              if ( tmask(i,j,iblk) .and. ailohi(i,j,iblk) > c0 .and. flwout(i,j,iblk) > -puny) then
