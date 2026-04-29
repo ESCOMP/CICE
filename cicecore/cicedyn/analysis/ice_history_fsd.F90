@@ -31,7 +31,6 @@
            f_dafsd_newi = 'm', f_dafsd_latg  = 'm', &
            f_dafsd_latm = 'm', f_dafsd_wave  = 'm', &
            f_dafsd_weld = 'm', f_wave_sig_ht = 'm', &
-           f_wave_period = 'm', &
            f_aice_ww    = 'x', f_diam_ww     = 'x', &
            f_hice_ww    = 'x', f_fsdrad      = 'x', &
            f_fsdperim   = 'x'
@@ -45,7 +44,6 @@
            f_dafsd_newi, f_dafsd_latg , &
            f_dafsd_latm, f_dafsd_wave , &
            f_dafsd_weld, f_wave_sig_ht, &
-           f_wave_period, &
            f_aice_ww   , f_diam_ww    , &
            f_hice_ww   , f_fsdrad     , &
            f_fsdperim
@@ -59,7 +57,6 @@
            n_dafsd_newi, n_dafsd_latg , &
            n_dafsd_latm, n_dafsd_wave , &
            n_dafsd_weld, n_wave_sig_ht, &
-           n_wave_period, &
            n_aice_ww   , n_diam_ww    , &
            n_hice_ww   , n_fsdrad     , &
            n_fsdperim
@@ -147,7 +144,6 @@
       call broadcast_scalar (f_dafsd_wave, master_task)
       call broadcast_scalar (f_dafsd_weld, master_task)
       call broadcast_scalar (f_wave_sig_ht, master_task)
-      call broadcast_scalar (f_wave_period, master_task)
       call broadcast_scalar (f_aice_ww, master_task)
       call broadcast_scalar (f_diam_ww, master_task)
       call broadcast_scalar (f_hice_ww, master_task)
@@ -163,11 +159,6 @@
              "significant height of wind and swell waves",  &
              "from attenuated spectrum in ice", c1, c0,     &
              ns, f_wave_sig_ht)
-      if (f_wave_period(1:1) /= 'x') &
-         call define_hist_field(n_wave_period,"wave_period","s",tstr2D, tcstr, &
-             "peak wave period",  &
-             "from attenuated spectrum in ice", c1, c0,     &
-             ns, f_wave_period)
       if (f_aice_ww(1:1) /= 'x') &
          call define_hist_field(n_aice_ww,"aice_ww","1",tstr2D, tcstr, &
              "Concentration of floes > Dmin",               &
@@ -205,7 +196,6 @@
          f_dafsd_wave  = 'x'
          f_dafsd_weld  = 'x'
          f_wave_sig_ht = 'x'
-         f_wave_period = 'x'
          f_fsdrad      = 'x'
          f_fsdperim    = 'x'
          if (.not. wave_spec) then
@@ -366,17 +356,6 @@
       if (f_wave_sig_ht(1:1)/= 'x') &
          call accum_hist_field(n_wave_sig_ht,   iblk, &
                                wave_sig_ht(:,:,iblk), a2D)
-
-      if (f_wave_period(1:1)/= 'x') then
-         do j = 1, ny_block
-         do i = 1, nx_block
-            ii = MAXLOC(wave_spectrum(i,j,:,iblk),DIM=1)
-            worka(i,j) = wavefreq(ii)
-            if (worka(i,j) > c0) worka(i,j) = c1 / worka(i,j)         ! peak period
-         end do
-         end do
-         call accum_hist_field(n_wave_period,   iblk, worka(:,:), a2D)
-      endif
 
       if (f_aice_ww(1:1)/= 'x') then
          do j = 1, ny_block
