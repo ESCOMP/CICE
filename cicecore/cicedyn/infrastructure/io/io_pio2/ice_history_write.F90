@@ -34,7 +34,7 @@
          character (len=11)   :: short_name
          character (len=45)   :: long_name
          character (len=30)   :: units
-         character (len=8)    :: axis
+         character (len=9)    :: axis
       END TYPE coord_attributes
 
       TYPE req_attributes         ! req'd netcdf attributes
@@ -281,7 +281,8 @@
          call ice_hist_coord_def(File, time_coord, pio_double, (/timid/), varid)
          call ice_pio_check(pio_put_att(File,varid,'calendar',cal_att), &
                  subname//' ERROR: defining att calendar: '//cal_att,file=__FILE__,line=__LINE__)
-         if (hist_avg(ns) .and. .not. write_ic) then
+         ! History restarts are snapshots of accumulated data at current time, do not write time bounds
+         if (hist_avg(ns) .and. .not. write_ic .and. .not. write_histrest_now) then
             call ice_pio_check(pio_put_att(File,varid,'bounds','time_bounds'), &
                  subname//' ERROR: defining att bounds time_bounds',file=__FILE__,line=__LINE__)
          endif
@@ -723,7 +724,8 @@
 
          ! Some coupled models require the time axis "stamp" to be in the middle
          ! or even beginning of averaging interval.
-         if (hist_avg(ns)) then
+         ! history restarts are snapshots of accumulated data at current time
+         if (hist_avg(ns) .and. .not. write_histrest_now) then
             if (trim(hist_time_axis) == "begin" ) ltime2 = time_beg(ns)
             if (trim(hist_time_axis) == "middle") ltime2 = p5*(time_beg(ns)+time_end(ns))
          endif
@@ -733,7 +735,8 @@
          call ice_pio_check(pio_put_var(File,varid,(/1/),ltime2), &
               subname//' ERROR: setting var time',file=__FILE__,line=__LINE__)
 
-         if (hist_avg(ns) .and. .not. write_ic) then
+         ! History restarts are snapshots of accumulated data at current time, do not write time bounds
+         if (hist_avg(ns) .and. .not. write_ic .and. .not. write_histrest_now) then
             call ice_pio_check(pio_inq_varid(File,'time_bounds',varid), &
                  subname//' ERROR: getting time_bounds' ,file=__FILE__,line=__LINE__)
             time_bounds=(/time_beg(ns),time_end(ns)/)
@@ -1513,6 +1516,7 @@
                write(nu_diag,*) subname,trim(readstr),' snwcnt'//cns
             endif
 
+            ! 2D
             do n=1,num_avail_hist_fields_2D
                if (avail_hist_fields(n)%vhistfreq == histfreq(ns)) then
                   readstr = readstrF
@@ -1530,31 +1534,6 @@
             enddo
 
             deallocate(work2)
-            allocate(work3(nx_block,ny_block,max_blocks,ncat_hist))
-
-            ! 2D
-            do n = n2D + 1, n3Dccum
-               nn = n - n2D
-               if (avail_hist_fields(n)%vhistfreq == histfreq(ns)) then
-                  readstr = readstrF
-                  status = pio_inq_varid(File,avail_hist_fields(n)%vname,varid)
-                  work3(:,:,:,:) = c0
-                  if (status == PIO_NOERR) call pio_read_darray(File, varid, iodesc3dc, work3, status)
-                  if (status == PIO_NOERR) then
-                     readstr = readstrT
-                     do j = 1, nblocks
-                     do i = 1, ncat_hist
-                        a3Dc(:,:,i,nn,j) = work3(:,:,j,i)
-                     enddo
-                     enddo
-                  endif
-                  if (my_task == master_task) then
-                     write(nu_diag,*) subname,trim(readstr),trim(avail_hist_fields(n)%vname)
-                  endif
-               endif
-            enddo
-
-            deallocate(work3)
             allocate(work3(nx_block,ny_block,max_blocks,ncat_hist))
 
             ! 3D (category)

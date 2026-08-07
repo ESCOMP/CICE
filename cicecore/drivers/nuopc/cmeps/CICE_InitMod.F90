@@ -91,7 +91,8 @@ contains
     use ice_restart_shared   , only: restart, runtype
     use ice_init             , only: input_data, init_state
     use ice_init_column      , only: init_thermo_vertical, init_shortwave, init_zbgc
-    use ice_restoring        , only: ice_HaloRestore_init
+    use ice_restoring        , only: restore_ice, ice_restoring_init
+    use ice_domain           , only: num_set_boundary_flds
     use ice_timers           , only: timer_total, init_ice_timers, ice_timer_start
     use ice_transport_driver , only: init_transport
     use ice_arrays_column    , only: wavefreq, dwavefreq
@@ -142,7 +143,7 @@ contains
 
     call init_state           ! initialize the ice state
     call init_transport       ! initialize horizontal transport
-    call ice_HaloRestore_init ! restored boundary conditions
+    if (restore_ice .or. num_set_boundary_flds > 0) call ice_restoring_init ! restoring on boundary or interior
 
     call icepack_query_parameters(skl_bgc_out=skl_bgc, z_tracers_out=z_tracers, &
          wave_spec_out=wave_spec, snw_aging_table_out=snw_aging_table)
