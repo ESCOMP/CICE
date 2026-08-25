@@ -21,7 +21,8 @@
        add_mpi_barriers, ice_barrier
    use ice_broadcast, only: broadcast_scalar, broadcast_array
    use ice_blocks, only: block, get_block, create_blocks, nghost, &
-       nblocks_x, nblocks_y, nblocks_tot, nx_block, ny_block, debug_blocks
+       nblocks_x, nblocks_y, nblocks_tot, nx_block, ny_block, debug_blocks, &
+       ew_boundary_type, ns_boundary_type
    use ice_distribution, only: distrb
    use ice_boundary, only: ice_halo
    use ice_exit, only: abort_ice
@@ -54,10 +55,6 @@
 
    type (ice_halo), public :: &
       halo_info          ! ghost cell update info
-
-   character (char_len), public :: &
-      ew_boundary_type,  &! type of domain bndy in each logical
-      ns_boundary_type    !    direction (ew is i, ns is j)
 
    integer (kind=int_kind), parameter, public :: &
       max_set_boundary_flds = 10
@@ -123,8 +120,7 @@
 
    integer (int_kind) :: &
       n, &                  ! counter
-      nml_error, &          ! namelist read error flag
-      nprocs_x, nprocs_y    ! procs decomposed into blocks
+      nml_error             ! namelist read error flag
 
    character(len=char_len)      :: nml_name ! text namelist name
    character(len=char_len_long) :: tmpstr2 ! for namelist check
@@ -398,8 +394,6 @@
    integer (int_kind), dimension (nx_global, ny_global) :: &
       flat                 ! latitude-dependent scaling factor
 
-   character (char_len) :: outstring
-
    integer (int_kind), parameter :: &
       max_work_unit=10    ! quantize the work into values from 1,max
 
@@ -416,7 +410,6 @@
       status             ,&! netcdf return code
 #endif
       tblocks_tmp        ,&! total number of blocks
-      nblocks_tmp        ,&! temporary value of nblocks
       nblocks_max          ! max blocks on proc
 
    real (dbl_kind) :: &

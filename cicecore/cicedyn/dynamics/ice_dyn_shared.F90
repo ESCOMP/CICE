@@ -265,11 +265,9 @@
 
       subroutine init_dyn_shared (dt)
 
-      use ice_blocks, only: block, get_block
+      use ice_blocks, only: block, get_block, ns_boundary_type
       use ice_boundary, only: ice_halo, ice_haloUpdate
-      use ice_domain, only: nblocks, halo_dynbundle, blocks_ice, halo_info, &
-          ns_boundary_type
-      use ice_domain_size, only: max_blocks
+      use ice_domain, only: nblocks, halo_dynbundle, blocks_ice, halo_info
       use ice_flux, only: &
           stressp_1, stressp_2, stressp_3, stressp_4, &
           stressm_1, stressm_2, stressm_3, stressm_4, &
@@ -2480,7 +2478,7 @@
       subroutine dyn_haloUpdate1(halo_info, halo_info_mask, field_loc, field_type, fld1)
 
       use ice_boundary, only: ice_halo, ice_HaloUpdate
-      use ice_domain, only: maskhalo_dyn, halo_dynbundle
+      use ice_domain, only: maskhalo_dyn
       use ice_timers, only: ice_timer_start, ice_timer_stop, timer_bound
 
       type (ice_halo), intent(in) :: &

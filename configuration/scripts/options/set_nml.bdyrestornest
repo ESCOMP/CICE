@@ -13,6 +13,7 @@ kmt_file       = 'grid_kmt.nc'
 ew_boundary_type = 'zero_gradient'
 ns_boundary_type = 'zero_gradient'
 set_boundary_flds = 'state','velocity'
+restore_data   = 'restartfiles'
 tr_iage        = .false.
 tr_FY          = .false.
 tr_lvl         = .false.

@@ -33,6 +33,7 @@ porting to a particular system, please let the Consortium know.
 The Consortium has tested the following compilers at some point,
 
 - AOCC 3.0.0
+- AOCC 4.1.0
 - Intel ifort 15.0.3.187
 - Intel ifort 16.0.1.150
 - Intel ifort 17.0.1.132
@@ -50,7 +51,11 @@ The Consortium has tested the following compilers at some point,
 - Intel ifort 2021.8.0
 - Intel ifort 2021.9.0
 - Intel ifort 2021.10.0
+- Intel ifort 2021.13.0
 - Intel ifort 2022.2.1
+- Intel ifort 2025.0
+- Intel ifx 2025.1.1
+- Intel ifx 2025.2.1
 - PGI 16.10.0
 - PGI 19.9-0
 - PGI 20.1-0
@@ -65,13 +70,21 @@ The Consortium has tested the following compilers at some point,
 - GNU 11.2.0
 - GNU 12.1.0
 - GNU 12.2.0
+- GNU 12.3.0
+- GNU 12.4.0
+- GNU 14.2.0
+- GNU 14.3.0
 - Cray CCE 8.5.8
 - Cray CCE 8.6.4
 - Cray CCE 13.0.2
 - Cray CCE 14.0.3
 - Cray CCE 15.0.1
+- Cray CCE 16.0.1
 - NAG 6.2
-- NVC 23.5-0
+- Nvidia 23.5-0
+- Nvidia 23.7-0
+- Nvidia 24.3-0
+
 
 The Consortium has tested the following MPI implementations and versions,
 
@@ -88,10 +101,19 @@ The Consortium has tested the following MPI implementations and versions,
 - MPICH 8.1.21
 - MPICH 8.1.25
 - MPICH 8.1.26
+- MPICH 8.1.27
+- MPICH 8.1.28
+- MPICH 8.1.29
+- MPICH 8.1.32
+- MPICH 9.1.0
 - Intel MPI 18.0.1
 - Intel MPI 18.0.4
+- Intel MPI 2019 Update 4
 - Intel MPI 2019 Update 6
 - Intel MPI 2019 Update 8
+- Intel MPI 2021.15
+- Intel MPI 2021.16
+- Intel MPI 2023.2.0
 - MPT 2.14
 - MPT 2.17
 - MPT 2.18
@@ -125,6 +147,8 @@ The NetCDF implementation is relatively general and should work with any version
 - NetCDF 4.8.1.3
 - NetCDF 4.9.0.1
 - NetCDF 4.9.0.3
+- NetCDF 4.9.0.9
+- NetCDF 4.9.0.13
 - NetCDF 4.9.2
 
 CICE has been tested with
@@ -134,9 +158,12 @@ CICE has been tested with
 - PIO 2.5.9
 - PIO 2.6.0
 - PIO 2.6.1
+- PIO 2.6.2
+- PIO 2.6.3
 - PnetCDF 1.12.2
 - PnetCDF 1.12.3
-- PnetCDF 2.6.2
+- PnetCDF 1.14.0
+- PnetCDF 1.14.1
 
 Please email the Consortium if this list can be extended.
 

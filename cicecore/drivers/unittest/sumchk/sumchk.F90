@@ -16,8 +16,8 @@
       use ice_communicate, only: my_task, master_task, get_num_procs
       use ice_domain_size, only: nx_global, ny_global
       use ice_domain_size, only: block_size_x, block_size_y, max_blocks
-      use ice_domain, only: distrb_info, ns_boundary_type
-      use ice_blocks, only: block, get_block, nx_block, ny_block, nblocks_tot
+      use ice_domain, only: distrb_info
+      use ice_blocks, only: block, get_block, nx_block, ny_block, nblocks_tot, ns_boundary_type
       use ice_distribution, only: ice_distributionGetBlockID, ice_distributionGet
       use ice_constants, only: field_loc_center, field_loc_Nface, field_loc_Eface, field_loc_NEcorner
       use ice_fileunits, only: bfbflag
