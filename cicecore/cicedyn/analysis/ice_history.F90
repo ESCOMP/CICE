@@ -1542,7 +1542,7 @@
 
          call define_hist_field(n_siflsenstop,"siflsenstop","W/m2",tstr2D, tcstr, &
              "net downward sensible heat flux over sea ice",                      &
-             "positive downward", c1, c0,                                         &
+             "positive upward", c1, c0,                                           &
              ns1, f_siflsenstop, avg_ice_present='init', mask_ice_free_points=.true.)
 
          call define_hist_field(n_siflswdbot,"siflswdbot","W/m2",tstr2D, tcstr, &
@@ -2980,7 +2980,7 @@
          endif
 
          if (f_sidmassevapsubl(1:1) /= 'x') then
-           call accum_hist_field(n_sidmassevapsubl, iblk, rho_ice(:,:)*evapi(:,:,iblk), a2D)
+           call accum_hist_field(n_sidmassevapsubl, iblk, -rho_ice(:,:)*evapi(:,:,iblk), a2D)
          endif
 
          if (f_sidmassmelttop(1:1) /= 'x') then
